@@ -1,0 +1,887 @@
+WITH SubTotalRownumbers (st, rn)
+AS (
+SELECT SubTotal, ROW_NUMBER() OVER(ORDER BY SubTotal) 'RN'
+FROM Sales.SalesOrderHeader
+)
+SELECT st 'SubTotal'
+FROM SubTotalRownumbers
+WHERE rn = 1
+
+
+
+
+
+
+USE AdventureWorks
+GO
+
+
+DECLARE @int1 int
+SET @int1 = 3
+
+SELECT @int1 % 2
+
+
+
+
+USE AdventureWorks
+GO
+
+--Create function to count the number of customers
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'FN' AND schema_id = 1
+    AND name = 'ufnCntCustomers')
+    DROP FUNCTION dbo.ufnCntCustomers
+GO
+
+
+CREATE FUNCTION dbo.ufnCntCustomers()
+RETURNS int
+AS
+BEGIN
+    RETURN (SELECT COUNT(*) FROM Sales.Customer)
+END
+GO
+
+--Invoke the function to count customers
+SELECT dbo.ufnCntCustomers() '# of Customers'
+GO
+
+
+--Create function to determine if a
+--number (@n) is odd
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'FN' AND schema_id = 1
+    AND name = 'ufnIsOdd')
+    DROP FUNCTION dbo.ufnIsOdd
+GO
+
+CREATE FUNCTION dbo.ufnIsOdd (@n AS int)
+RETURNS bit
+AS
+BEGIN
+    RETURN (@n % 2)
+END
+GO
+
+--Use ufnIsOdd function
+DECLARE @numb int
+SET @numb = 6
+SELECT @numb 'Number', dbo.ufnIsOdd (@numb) 'Is_odd = 1'
+SET @numb = 7
+SELECT @numb 'Number', dbo.ufnIsOdd (@numb) 'Is_odd = 1'
+
+--SELECT COUNT(SubTotal) FROM Sales.SalesOrderHeader
+DECLARE @VAL int
+SET @VAL = (SELECT COUNT(SubTotal) FROM Sales.SalesOrderHeader)
+PRINT @VAL
+IF (SELECT dbo.ufnIsOdd (@VAL)) = 1
+BEGIN
+    WITH SubTotalRownumbers (st, rn)
+    AS (
+    SELECT SubTotal, ROW_NUMBER() OVER(ORDER BY SubTotal) 'RN'
+    FROM Sales.SalesOrderHeader
+    )
+    SELECT st 'SubTotal'
+    FROM SubTotalRownumbers
+    WHERE rn = @VAL/2 + 1
+    END
+else
+    print 'even'
+
+--Drop ufnIsOdd function
+DROP FUNCTION dbo.ufnCntCustomers
+GO
+
+--Drop ufnIsOdd function
+DROP FUNCTION dbo.ufnIsOdd
+GO
+
+
+
+
+USE AdventureWorks
+GO
+
+
+SELECT OBJECT_id('ufnListAllSalesPersons')
+
+
+SELECT * FROM sys.objects WHERE name = 'ufnListAllSalesPersons'
+
+SELECT * FROM sys.objects
+WHERE type = 'FN' OR type = '%F%'
+
+sp_rename 'ufnIsOdd', 'ufnIsOddchanged'
+
+sp_rename 'ufnIsOddchanged', 'ufnIsOdd'
+
+SELECT SalesPersonID, FirstName, LastName, TerritoryName, Phone
+FROM Sales.vSalesPerson
+
+
+
+
+
+USE AdventureWorks
+GO
+
+
+--Create function to list all sales persons
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'IF' AND schema_id = 1
+    AND name = 'ufnListAllSalesPersons')
+    DROP FUNCTION dbo.ufnListAllSalesPersons
+GO
+
+CREATE FUNCTION dbo.ufnListAllSalesPersons()
+RETURNS TABLE
+AS
+RETURN (
+    SELECT SalesPersonID, FirstName, LastName, TerritoryName, Phone
+    FROM Sales.vSalesPerson)
+GO
+
+--Invoke the function to list all sales persons
+SELECT * FROM dbo.ufnListAllSalesPersons()
+
+--Drop inline function
+DROP FUNCTION dbo.ufnListAllSalesPersons
+
+
+
+
+
+USE AdventureWorks
+GO
+
+--Create function to list sales persons from a territory
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'IF' AND schema_id = 1
+    AND name = 'ufnListSalesPersonsInTerritory')
+    DROP FUNCTION dbo.ufnListSalesPersonsInTerritory
+GO
+
+CREATE FUNCTION
+    dbo.ufnListSalesPersonsInTerritory(@t AS nvarchar(50))
+RETURNS TABLE
+AS
+RETURN (
+    SELECT SalesPersonID, FirstName, LastName,
+        TerritoryName, Phone
+    FROM Sales.vSalesPerson
+        WHERE TerritoryName = @t)
+GO
+
+--Invoke the function to list sales persons for a territory
+DECLARE @t as nvarchar(50)
+SET @t = 'Canada'
+SELECT * FROM dbo.ufnListSalesPersonsInTerritory(@t)
+
+--Drop inline function
+DROP FUNCTION dbo.ufnListSalesPersonsInTerritory
+
+
+
+
+
+USE AdventureWorks
+GO
+
+--Make stored proc in default schema
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonNamePhoneEmail')
+    DROP PROCEDURE usp_SalePersonNamePhoneEmail
+GO
+
+CREATE PROCEDURE usp_SalePersonNamePhoneEmail
+AS
+SELECT s.TerritoryID, c.LastName, c.Phone, c.EmailAddress
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+GO
+
+--Invoke stored proc
+EXEC usp_SalePersonNamePhoneEmail
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonNamePhoneEmail
+GO
+
+--For display in book
+--Make stored proc in default schema
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonNamePhoneEmail')
+    DROP PROCEDURE usp_SalePersonNamePhoneEmail
+GO
+
+CREATE PROCEDURE usp_SalePersonNamePhoneEmail
+AS
+SELECT s.TerritoryID,
+    CAST(c.LastName AS nvarchar(17)) 'LastName',
+    CAST(c.Phone AS nvarchar(19)) 'Phone',
+    CAST(c.EmailAddress AS nvarchar(28)) 'EmailAddress'
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+GO
+
+--Invoke stored proc
+EXEC usp_SalePersonNamePhoneEmail
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonNamePhoneEmail
+GO
+
+
+--Searches for usp_ProductCategoryCountSubcategory in
+--any schema and drops stored proc in Production schema
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_ProductCategoryCountSubcategory')
+    DROP PROCEDURE
+        Production.usp_ProductCategoryCountSubcategory
+GO
+
+--Create a stored proc with two result sets
+CREATE PROCEDURE
+    Production.usp_ProductCategoryCountSubcategory
+AS
+
+SELECT ProductCategoryID, Name
+FROM Production.ProductCategory
+ORDER BY ProductCategoryID
+
+SELECT ProductCategoryID, COUNT(*) 'No. Subcategories'
+FROM Production.ProductSubcategory
+GROUP BY ProductCategoryID
+ORDER BY ProductCategoryID
+GO
+
+--Invoke stored proc
+EXEC Production.usp_ProductCategoryCountSubcategory
+GO
+
+--Drop stored proc
+DROP PROCEDURE
+    Production.usp_ProductCategoryCountSubcategory
+GO
+
+--For display in book
+--Searches for usp_ProductCategoryCountSubcategory in
+--any schema and drops stored proc in Production schema
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_ProductCategoryCountSubcategory')
+    DROP PROCEDURE
+        Production.usp_ProductCategoryCountSubcategory
+GO
+
+--Create a stored proc with two result sets
+CREATE PROCEDURE
+    Production.usp_ProductCategoryCountSubcategory
+AS
+
+SELECT ProductCategoryID, CAST(Name AS nvarchar(11)) 'Name'
+FROM Production.ProductCategory
+ORDER BY ProductCategoryID
+
+SELECT ProductCategoryID, COUNT(*) 'No. Subcategories'
+FROM Production.ProductSubcategory
+GROUP BY ProductCategoryID
+ORDER BY ProductCategoryID
+GO
+
+--Invoke stored proc
+EXEC Production.usp_ProductCategoryCountSubcategory
+GO
+
+--Drop stored proc
+DROP PROCEDURE
+    Production.usp_ProductCategoryCountSubcategory
+GO
+
+
+
+
+
+USE AdventureWorks
+GO
+
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritory')
+    DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--Create a stored proc with an input parameter
+CREATE PROCEDURE usp_SalePersonInATerritory
+@TID int
+AS
+SELECT s.TerritoryID, c.LastName, c.Phone
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+WHERE s.TerritoryID = @TID
+GO
+
+--Run the stored proc with two different
+--parameter values
+EXEC usp_SalePersonInATerritory 1
+GO
+EXEC usp_SalePersonInATerritory 2
+GO
+
+--Failing to input a parameter can cause a failure
+--EXEC usp_SalePersonInATerritory
+--GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--For display in book
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritory')
+    DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--Create a stored proc with an input parameter
+CREATE PROCEDURE usp_SalePersonInATerritory
+@TID int
+AS
+SELECT s.TerritoryID,
+    CAST(c.LastName AS nvarchar(17)) 'LastName',
+    CAST(c.Phone AS nvarchar(19)) 'Phone'
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+WHERE s.TerritoryID = @TID
+GO
+
+--Run the stored proc with two different
+--parameter values
+EXEC usp_SalePersonInATerritory 1
+GO
+EXEC usp_SalePersonInATerritory 2
+GO
+
+--Failing to input a parameter can cause a failure
+--EXEC usp_SalePersonInATerritory
+--GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritory')
+    DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--Create a stored proc with an input parameter and
+--a non-null default value
+CREATE PROCEDURE usp_SalePersonInATerritory
+@TID int = 2
+AS
+SELECT s.TerritoryID, c.LastName, c.Phone
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+WHERE s.TerritoryID = @TID
+GO
+
+--Run the stored proc with two different
+--parameter values
+EXEC usp_SalePersonInATerritory 1
+GO
+
+--Failing to input a parameter can causeS 
+--usp_SalePersonInATerritory to use defaul
+--parameter value
+EXEC usp_SalePersonInATerritory
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--For display in book
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritory')
+    DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+--Create a stored proc with an input parameter and
+--a non-null default value
+CREATE PROCEDURE usp_SalePersonInATerritory
+@TID int = 2
+AS
+SELECT s.TerritoryID,
+    CAST(c.LastName AS nvarchar(17)) 'LastName',
+    CAST(c.Phone AS nvarchar(19)) 'Phone'
+FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+ON s.SalesPersonID = e.EmployeeID
+JOIN Person.Contact c
+ON c.ContactID = e.ContactID
+WHERE s.TerritoryID = @TID
+GO
+
+--Run the stored proc with two different
+--parameter values
+EXEC usp_SalePersonInATerritory 1
+GO
+
+--Failing to input a parameter can causeS 
+--usp_SalePersonInATerritory to use defaul
+--parameter value
+EXEC usp_SalePersonInATerritory
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritory
+GO
+
+
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritoryOrNot')
+    DROP PROCEDURE usp_SalePersonInATerritoryOrNot
+GO
+
+--Create a stored proc with an input parameter,
+--default value assignment, and IF statement
+CREATE PROCEDURE usp_SalePersonInATerritoryOrNot
+@TID int = NULL
+AS
+IF @TID IS NOT NULL
+    SELECT s.TerritoryID, c.LastName, c.Phone
+    FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+    ON s.SalesPersonID = e.EmployeeID
+    JOIN Person.Contact c
+    ON c.ContactID = e.ContactID
+    WHERE s.TerritoryID = @TID
+ELSE
+    SELECT s.TerritoryID, c.LastName, c.Phone
+    FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+    ON s.SalesPersonID = e.EmployeeID
+    JOIN Person.Contact c
+    ON c.ContactID = e.ContactID
+    WHERE s.TerritoryID IS NULL
+GO
+
+--Run the stored proc with three different
+--parameter values, including NULL
+EXEC usp_SalePersonInATerritoryOrNot 1
+GO
+EXEC usp_SalePersonInATerritoryOrNot 2
+GO
+EXEC usp_SalePersonInATerritoryOrNot
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritoryOrNot
+GO
+
+--For display in book
+--Drop prior instance of stored proc
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalePersonInATerritoryOrNot')
+    DROP PROCEDURE usp_SalePersonInATerritoryOrNot
+GO
+
+--Create a stored proc with an input parameter,
+--default value assignment, and IF statement
+CREATE PROCEDURE usp_SalePersonInATerritoryOrNot
+@TID int = NULL
+AS
+IF @TID IS NOT NULL
+    SELECT s.TerritoryID,
+        CAST(c.LastName AS nvarchar(17)) 'LastName',
+        CAST(c.Phone AS nvarchar(19)) 'Phone'
+    FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+    ON s.SalesPersonID = e.EmployeeID
+    JOIN Person.Contact c
+    ON c.ContactID = e.ContactID
+    WHERE s.TerritoryID = @TID
+ELSE
+    SELECT s.TerritoryID,
+        CAST(c.LastName AS nvarchar(17)) 'LastName',
+        CAST(c.Phone AS nvarchar(19)) 'Phone'
+    FROM Sales.SalesPerson S JOIN HumanResources.Employee e
+    ON s.SalesPersonID = e.EmployeeID
+    JOIN Person.Contact c
+    ON c.ContactID = e.ContactID
+    WHERE s.TerritoryID IS NULL
+GO
+
+--Run the stored proc with three different
+--parameter values, including NULL
+EXEC usp_SalePersonInATerritoryOrNot 1
+GO
+EXEC usp_SalePersonInATerritoryOrNot 2
+GO
+EXEC usp_SalePersonInATerritoryOrNot
+GO
+
+--Drop stored proc
+DROP PROCEDURE usp_SalePersonInATerritoryOrNot
+GO
+
+
+--Create function to determine if a
+--number (@n) is odd
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'FN' AND schema_id = 1
+    AND name = 'ufnIsOdd')
+    DROP FUNCTION dbo.ufnIsOdd
+GO
+
+CREATE FUNCTION dbo.ufnIsOdd (@n int = 5)
+RETURNS bit
+AS
+BEGIN
+    RETURN (@n % 2)
+END
+GO
+
+--Use ufnIsOdd function
+DECLARE @numb int
+
+--Input a null value returns null instead of 
+--using default parameter
+SELECT dbo.ufnIsOdd (@numb) 'Is_odd = 1'
+
+--To tap default parameter value, you must 
+--explicitly reference default value with the 
+--default keyword
+SELECT dbo.ufnIsOdd (DEFAULT) 'Is_odd = 1'
+
+--Drop ufnIsOdd function
+DROP FUNCTION dbo.ufnIsOdd
+GO
+
+
+
+
+USE AdventureWorks
+GO
+
+--Create view with SubTotal values from
+--Sales.SalesOrderHeader table and row numbers
+IF EXISTS(SELECT *
+    FROM sys.views
+    WHERE name = 'STRow_Numbers' AND
+    schema_id = 1)
+    DROP VIEW dbo.STRow_Numbers
+GO
+
+CREATE VIEW dbo.STRow_Numbers
+AS
+SELECT SubTotal, Row_Number() OVER (ORDER BY SubTotal) rn
+FROM Sales.SalesOrderHeader
+GO
+
+
+--Create a view that returns the minimum and maximum
+--Subtotal values as output parameters
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_MinMaxSubTotal')
+    DROP PROCEDURE usp_MinMaxSubTotal
+GO
+
+--Create a stored proc with an input parameter
+CREATE PROCEDURE usp_MinMaxSubTotal
+@minSubTotal money OUTPUT,
+@maxSubTotal money OUTPUT
+AS
+SET @minSubTotal =
+    (SELECT TOP 1 SubTotal
+        FROM dbo.STRow_Numbers ORDER BY rn)
+SET @maxSubTotal =
+    (SELECT TOP 1 SubTotal
+        FROM dbo.STRow_Numbers ORDER BY rn DESC)
+GO
+
+--Invoke usp_MinMaxSubTotal to retrieve maximum and
+--minimum SubTotal values
+DECLARE @lclmin money, @lclmax money
+EXEC usp_MinMaxSubTotal @minSubTotal = @lclmin OUTPUT,
+    @maxSubTotal = @lclmax OUTPUT
+
+SELECT @lclmin 'Min. SubTotal', @lclmax 'Min. SubTotal'
+GO
+
+--Create FN user-defined function to determin
+--if a number is odd or even
+IF EXISTS(
+    SELECT * FROM sys.objects
+    WHERE type = 'FN' AND schema_id = 1
+    AND name = 'ufnIsOdd')
+    DROP FUNCTION dbo.ufnIsOdd
+GO
+
+CREATE FUNCTION dbo.ufnIsOdd (@n int)
+RETURNS bit
+AS
+BEGIN
+    RETURN (@n % 2)
+END
+GO
+
+
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_MedianSubTotal')
+    DROP PROCEDURE usp_MedianSubTotal
+GO
+
+--Create a stored proc with an input parameter
+CREATE PROCEDURE usp_MedianSubTotal
+@MedianVal money OUTPUT
+AS
+
+DECLARE @rnval int
+DECLARE @midup money, @middown money
+
+--Compute near middle row
+SET @rnval = ((SELECT COUNT(*) FROM dbo.STRow_Numbers)/2)
+PRINT @rnval;
+
+IF dbo.ufnIsOdd
+    ((SELECT COUNT(*)
+        FROM dbo.STRow_Numbers)) = 1
+    --get mediam for odd count
+    SET @MedianVal = (SELECT SubTotal
+    FROM dbo.STRow_Numbers
+    WHERE rn = @rnval + 1)
+ELSE
+BEGIN
+    --compute mediam for even count
+    SET @midup =
+        (SELECT SubTotal
+            FROM dbo.STRow_Numbers
+            WHERE rn = @rnval)
+    SET @middown =
+        (SELECT SubTotal
+            FROM dbo.STRow_Numbers
+            WHERE rn = (SELECT @rnval + 1))
+    SET @MedianVal =
+        (SELECT (@midup + @middown)/2)
+END
+GO
+
+--Invoke usp_MedianSubTotal to retrieve median SubTotal value
+DECLARE @MedValue money
+EXEC usp_MedianSubTotal @MedianVal = @MedValue OUTPUT
+
+SELECT @MedValue
+
+
+
+DROP PROCEDURE usp_MinMaxSubTotal
+DROP PROCEDURE usp_MedianSubTotal
+DROP FUNCTION dbo.ufnIsOdd
+DROP VIEW dbo.STRow_Numbers
+
+
+
+
+
+USE AdventureWorks
+GO
+
+IF EXISTS(SELECT * FROM sys.objects
+    WHERE type = 'P' AND
+    name = 'usp_SalesPersonReport')
+    DROP PROCEDURE usp_SalesPersonReport
+GO
+
+CREATE PROC usp_SalesPersonReport
+@BestSalesPerson nvarchar(150) OUTPUT
+AS
+
+SET @BestSalesPerson = (SELECT REPLACE(FirstName + ' ' +
+    ISNULL(MiddleName, '') + ' ' + LastName, '  ', ' ')
+    FROM Sales.VSalesPerson
+    WHERE SalesYTD =
+    (SELECT MAX(SalesYTD) FROM Sales.VSalesPerson))
+
+SELECT SalesPersonID, FirstName, MiddleName,
+    LastName, SalesYTD
+FROM Sales.VSalesPerson
+
+IF (SELECT SalesYTD
+    FROM Sales.VSalesPerson
+    WHERE SalesYTD = (SELECT MAX(SalesYTD)
+    FROM Sales.VSalesPerson)) >
+    (SELECT SalesLastYear
+    FROM Sales.VSalesPerson
+    WHERE SalesYTD =
+    (SELECT MAX(SalesYTD)
+    FROM Sales.VSalesPerson))
+    RETURN 1
+ELSE
+    RETURN 0
+GO
+
+
+DECLARE @BestName nvarchar(150), @rsval int
+EXEC @rsval = usp_SalesPersonReport
+    @BestSalesPerson = @BestName OUTPUT
+
+IF @rsval = 1
+    SELECT @BestName  'Best sales person is:',
+        'Yes' 'Exceeded last year:'
+ELSE
+    SELECT @BestName  'Best sales person is:',
+        'No' 'Exceeded last year:'
+
+DROP PROCEDURE usp_SalesPersonReport
+
+
+
+USE ProSSEAppsCh07
+GO
+
+--Create a new view after dropping previously\
+--existing version of view
+IF EXISTS(SELECT *
+    FROM sys.views
+    WHERE name = 'StudentGrades' AND 
+    schema_id = 1)
+    DROP VIEW dbo.StudentGrades
+GO
+
+CREATE VIEW dbo.StudentGrades
+AS
+SELECT s.StudentID, s.FirstName, s.LastName, s.Fullname,
+    c.ClassID, c.ClassTitle, cg.Gradeletter
+FROM Classes c JOIN ClassGrades cg
+ON c.ClassID = cg.ClassID
+JOIN Students S
+ON s.StudentID = cg.StudentID
+GO
+
+
+--SELECT from view before adding a new class
+SELECT DISTINCT ClassID, ClassTitle
+FROM dbo.StudentGrades
+ORDER BY ClassID
+GO
+
+--INSERT new class through view
+INSERT dbo.StudentGrades (ClassID, ClassTitle)
+    VALUES (2, 'Learning Visual Basic Express for DBAs')
+GO
+
+--SELECT from view after adding a new class
+SELECT DISTINCT ClassID, ClassTitle
+FROM dbo.StudentGrades
+ORDER BY ClassID
+GO
+
+--Verify new row is there by querying the Classes table
+SELECT ClassID, ClassTitle
+FROM Classes
+GO
+
+--Attempt to insert generates an error because modification
+--affects multiple base tables
+INSERT dbo.StudentGrades (ClassID, StudentID, Gradeletter)
+    VALUES(2, 1, 'B')
+INSERT dbo.StudentGrades (ClassID, StudentID, Gradeletter)
+    VALUES(2, 2, 'A')
+GO
+
+--Remedy by inserting directly into a base table
+INSERT ClassGrades (ClassID, StudentID, Gradeletter)
+    VALUES(2, 1, 'B')
+INSERT ClassGrades (ClassID, StudentID, Gradeletter)
+    VALUES(2, 2, 'A')
+GO
+
+--SELECT from view after adding a new class
+SELECT DISTINCT ClassID, ClassTitle
+FROM dbo.StudentGrades
+ORDER BY ClassID
+GO
+
+--SELECT from view before updating LastName
+SELECT StudentID, FullName, ClassTitle, GradeLetter
+FROM dbo.StudentGrades
+ORDER BY StudentID, ClassID
+
+--Update LastName of student
+UPDATE dbo.StudentGrades
+SET LastName = 'DBA-Minister'
+WHERE StudentID = 2
+GO
+
+
+--SELECT from view after updating last name
+SELECT  StudentID, FullName, ClassTitle, GradeLetter
+FROM dbo.StudentGrades
+ORDER BY StudentID, ClassID
+
+
+
+--SELECT from view before updating LastName
+SELECT StudentID, 
+    CAST(FullName AS nvarchar(19)) 'FullName', 
+    CAST(ClassTitle AS nvarchar(38)) 'ClassTitle', 
+    GradeLetter
+FROM dbo.StudentGrades
+ORDER BY StudentID, ClassID
+
+--Update LastName of student
+UPDATE dbo.StudentGrades
+SET LastName = 'DBA-Minister'
+WHERE StudentID = 2
+GO
+
+
+--SELECT from view after updating last name
+SELECT  StudentID, 
+    CAST(FullName AS nvarchar(19)) 'FullName', 
+    CAST(ClassTitle AS nvarchar(38)) 'ClassTitle', 
+    GradeLetter
+FROM dbo.StudentGrades
+ORDER BY StudentID, ClassID
+
+
+
+
+
+
+
+
+
+
+
+

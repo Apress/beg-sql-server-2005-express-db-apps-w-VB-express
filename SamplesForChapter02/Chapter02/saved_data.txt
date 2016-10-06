@@ -1,0 +1,11 @@
+Changed database context to 'AdventureWorks'.
+Sales person
+------------
+          17
+
+(1 rows affected)
+Employees  
+-----------
+        290
+
+(1 rows affected)

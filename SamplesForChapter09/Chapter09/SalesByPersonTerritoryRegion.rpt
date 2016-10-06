@@ -1,0 +1,22 @@
+Changed database context to 'AdventureWorks'.
+Region         Territory      SalesPersonID FirstName LastName          SalesYTD              SalesLastYear        
+-------------- -------------- ------------- --------- ----------------- --------------------- ---------------------
+NULL           NULL                     268 Stephen   Jiang                       677558.4653                0.0000
+United States  Northeast                275 Michael   Blythe                     4557045.0459          1750406.4785
+United States  Southwest                276 Linda     Mitchell                   5200475.2313          1439156.0291
+United States  Central                  277 Jillian   Carson                     3857163.6332          1997186.2037
+Canada         Canada                   278 Garrett   Vargas                     1764938.9859          1620276.8966
+United States  Southeast                279 Tsvi      Reiter                     2811012.7151          1849640.9418
+United States  Northwest                280 Pamela    Ansman-Wolfe                     0.0000          1927059.1780
+United States  Southwest                281 Shu       Ito                        3018725.4858          2073505.9999
+Canada         Canada                   282 José      Saraiva                    3189356.2465          2038234.6549
+United States  Northwest                283 David     Campbell                   3587378.4257          1371635.3158
+NULL           NULL                     284 Amy       Alberts                     636440.2510                0.0000
+United Kingdom United Kingdom           285 Jae       Pak                        5015682.3752          1635823.3967
+France         France                   286 Ranjit    Varkey Chudukatil          3827950.2380          2396539.7601
+United States  Northwest                287 Tete      Mensa-Annan                1931620.1835                0.0000
+NULL           NULL                     288 Syed      Abbas                       219088.8836                0.0000
+Germany        Germany                  289 Rachel    Valdez                     2241204.0424          1307949.7917
+Australia      Australia                290 Lynn      Tsoflias                   1758385.9260          2278548.9776
+
+(17 rows affected)

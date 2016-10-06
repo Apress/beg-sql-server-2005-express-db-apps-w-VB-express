@@ -1,0 +1,3 @@
+
+
+sqlcmd -S .\sqlexpress -i c:\ProSSEApps\Chapter09\SalesByPersonTerritoryRegion.sql -o c:\ProSSEApps\Chapter09\SalesByPersonTerritoryRegion.rpt

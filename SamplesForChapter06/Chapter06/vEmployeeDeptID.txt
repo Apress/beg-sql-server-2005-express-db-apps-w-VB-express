@@ -1,0 +1,12 @@
+CREATE VIEW dbo.vEmployeeDeptID
+AS
+SELECT     HumanResources.Employee.EmployeeID, HumanResources.Employee.ManagerID, HumanResources.EmployeeDepartmentHistory.DepartmentID, 
+                      HumanResources.Employee.NationalIDNumber, HumanResources.Employee.ContactID, HumanResources.Employee.LoginID, 
+                      HumanResources.Employee.Title, HumanResources.Employee.BirthDate, HumanResources.Employee.MaritalStatus, 
+                      HumanResources.Employee.Gender, HumanResources.Employee.HireDate, HumanResources.Employee.SalariedFlag, 
+                      HumanResources.Employee.VacationHours, HumanResources.Employee.SickLeaveHours, HumanResources.Employee.CurrentFlag, 
+                      HumanResources.Employee.rowguid, HumanResources.Employee.ModifiedDate
+FROM         HumanResources.EmployeeDepartmentHistory INNER JOIN
+                      HumanResources.Employee ON HumanResources.EmployeeDepartmentHistory.EmployeeID = HumanResources.Employee.EmployeeID
+
+GO

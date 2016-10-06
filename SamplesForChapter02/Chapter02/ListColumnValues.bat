@@ -1,0 +1,1 @@
+sqlcmd -S .\sqlexpress -v DBName = "Northwind" CName = "CompanyName" TName = "Shippers" -i c:\prosseapps\chapter02\ListColumnValues.sql -o c:\prosseapps\chapter02\ColumnValuesOut.rpt
